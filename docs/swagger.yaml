@@ -1,0 +1,1051 @@
+definitions:
+  controller.DiscoveryPreferencesResponse:
+    properties:
+      email:
+        type: string
+      radius_km:
+        type: integer
+    type: object
+  controller.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    type: object
+  controller.InterestsResponse:
+    properties:
+      email:
+        type: string
+      interests:
+        items:
+          $ref: '#/definitions/interfaces.UserInterestResponseItem'
+        type: array
+    type: object
+  controller.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  controller.PresignProfilePhotoGetResponse:
+    properties:
+      url:
+        type: string
+    type: object
+  controller.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  controller.ResetPasswordRequest:
+    properties:
+      new_password:
+        type: string
+      token:
+        type: string
+    type: object
+  controller.UploadProfilePhotoResponse:
+    properties:
+      message:
+        example: profile picture uploaded
+        type: string
+      public_url:
+        example: http://localhost:9000/user-media/users/<sub>/profile.jpg
+        type: string
+    type: object
+  controller.UserInterestsUpdateRequest:
+    properties:
+      interests:
+        items:
+          $ref: '#/definitions/interfaces.UserInterestItemInput'
+        type: array
+    type: object
+  controller.UserPublicInfoResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+    type: object
+  interfaces.DiscoveryPreferencesInput:
+    properties:
+      radius_km:
+        type: integer
+    type: object
+  interfaces.NotificationSettingsInput:
+    properties:
+      chat_email:
+        type: boolean
+      chat_push:
+        type: boolean
+      expo_push_token:
+        type: string
+      favorite_email:
+        type: boolean
+      favorite_push:
+        type: boolean
+      like_email:
+        type: boolean
+      like_push:
+        type: boolean
+      system_email:
+        type: boolean
+      system_push:
+        type: boolean
+    type: object
+  interfaces.UserInterestItemInput:
+    properties:
+      id:
+        type: integer
+      value:
+        type: boolean
+    type: object
+  interfaces.UserInterestResponseItem:
+    properties:
+      id:
+        type: integer
+      key:
+        type: string
+      value:
+        type: boolean
+    type: object
+  keycloak.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  models.User:
+    properties:
+      biography:
+        type: string
+      country:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      is_blocked:
+        type: boolean
+      job_function:
+        type: string
+      keycloak_id:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      phone_number_visible:
+        type: boolean
+      profile_photo_url:
+        type: string
+      sector:
+        type: string
+    type: object
+  models.Badge:
+    type: object
+    properties:
+      key:
+        type: string
+        example: profile_complete
+      name:
+        type: string
+        example: Complete Profile
+      description:
+        type: string
+        example: User completed all required profile information
+  models.UserBadge:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      user_id:
+        type: string
+        format: uuid
+      badge_key:
+        type: string
+        example: profile_complete
+      earned_at:
+        type: string
+        format: date-time
+      badge:
+        $ref: '#/definitions/models.Badge'
+
+info:
+  contact: {}
+paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: If the email exists, a reset message will be sent.
+      parameters:
+      - description: Forgot password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Request a password reset
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return a Keycloak access token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/keycloak.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+      tags:
+      - Authentication
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Use refresh token to get a new access token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/keycloak.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
+      tags:
+      - Authentication
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets the user's password using the provided token and new password.
+      parameters:
+      - description: Reset password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reset password using a token
+      tags:
+      - Auth
+  /internal/users/{email}/discovery-preferences:
+    get:
+      description: Internal endpoint - requires X-Service-Token. Returns discovery
+        preferences for a user by email.
+      parameters:
+      - description: Service token
+        in: header
+        name: X-Service-Token
+        required: true
+        type: string
+      - description: User email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.DiscoveryPreferencesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get discovery preferences by email (internal)
+      tags:
+      - DiscoveryPreferences
+  /internal/users/{email}/interests:
+    get:
+      description: Internal endpoint for other services (requires X-Service-Token)
+      parameters:
+      - description: Service token
+        in: header
+        name: X-Service-Token
+        required: true
+        type: string
+      - description: User Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.InterestsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user interests (internal)
+      tags:
+      - Interests
+  /internal/users/{email}/notification-settings:
+    get:
+      description: Internal endpoint for services to get notification settings by
+        email
+      parameters:
+      - description: Service token
+        in: header
+        name: X-Service-Token
+        required: true
+        type: string
+      - description: User email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get notification settings by email (internal)
+      tags:
+      - Notifications
+  /users/{email}:
+    get:
+      description: Internal endpoint - requires X-Service-Token
+      parameters:
+      - description: Service token
+        in: header
+        name: X-Service-Token
+        required: true
+        type: string
+      - description: User email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user by email (internal)
+      tags:
+      - Users
+  /users/{firstname}/{lastname}:
+    get:
+      consumes:
+      - application/json
+      description: Returns only first_name, last_name and email for the matched user.
+        Requires Bearer access token.
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: First name
+        in: path
+        name: firstname
+        required: true
+        type: string
+      - description: Last name
+        in: path
+        name: lastname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.UserPublicInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user email by firstname-lastname
+      tags:
+      - Users
+  /users/keycloak/{sub}:
+    get:
+      description: Get a single user by their Keycloak subject (sub) ID
+      parameters:
+      - description: Keycloak subject ID
+        in: path
+        name: sub
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Missing Keycloak sub
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user by Keycloak subject
+      tags:
+      - Users
+  /users/me:
+    put:
+      consumes:
+      - application/json
+      description: Update logged-in user's profile data
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Updated user fields
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update my user profile
+      tags:
+      - Users
+  /users/me/discovery-preferences:
+    get:
+      description: Returns the discovery preferences (km radius) for the authenticated
+        user. If none exist, defaults are returned.
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.DiscoveryPreferencesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get discovery preferences for current user
+      tags:
+      - DiscoveryPreferences
+    put:
+      consumes:
+      - application/json
+      description: Updates the discovery preferences (km radius) for the authenticated
+        user.
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Discovery preferences input
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.DiscoveryPreferencesInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.DiscoveryPreferencesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update discovery preferences for current user
+      tags:
+      - DiscoveryPreferences
+  /users/me/interests:
+    get:
+      description: Get interests for the authenticated user
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.InterestsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get user interests
+      tags:
+      - Interests
+    put:
+      consumes:
+      - application/json
+      description: Update interests for the authenticated user (send array with {id,value})
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Updated interests
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UserInterestsUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.InterestsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user interests
+      tags:
+      - Interests
+  /users/me/notification-settings:
+    put:
+      consumes:
+      - application/json
+      description: Update notification settings for the authenticated user.
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Updated settings
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.NotificationSettingsInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update notification settings
+      tags:
+      - Notifications
+  /users/me/profile-photo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a profile photo (multipart/form-data) to MinIO/S3, stores
+        the public URL in the user profile, and returns the public URL.
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Profile photo file (jpeg/png/webp). Max 5MB.
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.UploadProfilePhotoResponse'
+        "400":
+          description: Missing file / unsupported type / too large
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload profile photo
+      tags:
+      - Users
+  /users/me/profile-photo/url:
+    get:
+      description: Returns a presigned GET URL to download the logged-in user's profile
+        photo from MinIO/S3.
+      parameters:
+      - description: Bearer access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.PresignProfilePhotoGetResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User or profile photo not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Presign profile photo download
+      tags:
+      - Users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user in the database and Keycloak
+      parameters:
+      - description: User info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Register a new user
+      tags:
+      - Users
+  /users/me/badges:
+    get:
+      description: Returns all badges earned by the authenticated user.
+      parameters:
+      - in: header
+        name: Authorization
+        required: true
+        type: string
+        description: Bearer access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.UserBadge'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Could not load badges
+      summary: Get my badges
+      tags:
+      - Badges
+  /users/id/{id}/badges:
+    get:
+      description: Returns all badges earned by a user ID.
+      parameters:
+      - in: header
+        name: Authorization
+        required: true
+        type: string
+      - in: path
+        name: id
+        required: true
+        type: string
+        description: User ID (UUID)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.UserBadge'
+        "400":
+          description: Invalid user ID
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+        "500":
+          description: Could not load badges
+      summary: Get badges by user ID
+      tags:
+      - Badges
+  /internal/badges/award:
+    post:
+      description: Internal endpoint to award a badge to a user. Requires X-Service-Token.
+      parameters:
+      - in: header
+        name: X-Service-Token
+        required: true
+        type: string
+      - in: body
+        name: request
+        required: true
+        schema:
+          type: object
+          properties:
+            user_id:
+              type: string
+            badge_key:
+              type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Badge awarded
+        "400":
+          description: Invalid input
+        "500":
+          description: Internal error
+      summary: Award a badge (internal)
+      tags:
+      - Badges
+
+
+
+swagger: "2.0"
